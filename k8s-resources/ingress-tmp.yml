@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: phoenix-java-tmp-ingress
+  annotations:
+    kubernetes.io/ingress.class: internal-ingress
+    kubernetes.io/tls-acme: "false"
+spec:
+  tls:
+  - hosts:
+      - phoenix-java-tmp.nbs-shared-cbj-dev.aws.nbscloud.co.uk
+    secretName: phoenix-java-tls
+  rules:
+  - host: phoenix-java-tmp.nbs-shared-cbj-dev.aws.nbscloud.co.uk
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: helloworld-java
+          servicePort: 80

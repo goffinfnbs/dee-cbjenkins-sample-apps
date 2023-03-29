@@ -1,0 +1,27 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "inbound-task-api.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: {{ quote .Values.ingress.tls }}
+    nginx.ingress.kubernetes.io/force-ssl-redirect: {{ quote .Values.ingress.tls }}
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.subdomain }}-nx.{{ .Values.environment }}.nbs-shared-cbj-{{ .Values.account }}.aws.nbscloud.co.uk
+      secretName: {{ include "inbound-task-api.name" . }}-cert
+  rules:
+    - host: {{ .Values.ingress.subdomain }}-nx.{{ .Values.environment }}.nbs-shared-cbj-{{ .Values.account }}.aws.nbscloud.co.uk
+      http:
+        paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: {{ include "inbound-task-api.fullname" . }}
+                  port:
+                    number: {{ .Values.service.port }}
+{{- end }}

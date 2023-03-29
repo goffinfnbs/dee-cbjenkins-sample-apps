@@ -1,0 +1,11 @@
+apiVersion: v2
+name: dee-cbjenkins-sample-apps
+description: A Helm chart for the sample java app
+icon: https://images.ctfassets.net/vtn4rfaw6n2j/7xprMMXARXDBuVxW4y8XfV/349fff91035050e3f2a8ff37bc0615b5/cloudbees-core-logo_header.svg
+type: application
+version: 1.0.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+appVersion: 2.0.0

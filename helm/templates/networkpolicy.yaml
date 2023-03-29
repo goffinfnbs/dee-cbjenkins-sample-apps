@@ -1,0 +1,22 @@
+{{ if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-allow-all
+  namespace: {{ .Values.namespace }}
+  labels:
+    component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ template "inbound-task-api.name" . }}
+    helm.sh/chart: {{ template "inbound-task-api.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  podSelector: {}
+  egress:
+  - {}
+  ingress:
+  - {}
+  policyTypes:
+  - Egress
+  - Ingress
+{{- end }}

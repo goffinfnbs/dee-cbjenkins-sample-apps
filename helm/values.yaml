@@ -1,0 +1,65 @@
+SERVICE_NAME: cicd-cbjenkins-sample-apps
+SERVICE_PORT: 443
+
+namespace: "cicd"
+
+replicaCount: 1
+
+environment: blue
+account: dev
+
+config:
+  port: "8080"
+  serviceAccountIamRole: ""
+  environment:
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: ""
+    # TODO Add topic config
+    SPRING_KAFKA_PROPERTIES_SASL_MECHANISM: "AWS_MSK_IAM"
+    SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL: "SASL_SSL"
+    SPRING_KAFKA_USERNAME: "inbound-task-api"
+    SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG: software.amazon.msk.auth.iam.IAMLoginModule required awsRoleSessionName="msk" awsStsRegion="${AWS_REGION}";
+    SPRING_KAFKA_PROPERTIES_SASL_CLIENT_CALLBACK_HANDLER_CLASS: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+
+  # Once below issue is fixed, this flag can be removed, and we can set resources to null
+  # https://github.com/helm/helm/issues/5184
+  enableResources: true
+  resources:
+    limits:
+      cpu: "2"
+      memory: "12Gi"
+    requests:
+      cpu: "1"
+      memory: "8Gi"
+
+image:
+  repository: cicd-docker-dev.artifactory.aws.nbscloud.co.uk/dee-cbjenkins-sample-apps
+  pullSecrets: artifactory-docker-registry
+  pullPolicy: Always
+
+vault:
+  enabled: false
+
+clusterRoleBinding:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+
+service:
+  create: true
+  type: ClusterIP
+  port: 8080
+
+serviceAccount:
+  enabled: true
+  saName: dee-cbjenkins-sample-apps
+
+serviceMesh:
+  enabled: false
+
+ingress:
+  subdomain: tskrcvr
+  tls: false
+
+affinity:
+  enabled: false

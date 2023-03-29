@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: helloworld-java
+  labels:
+    app: helloworld-java
+spec:
+  # modify replicas according to your case
+  replicas: 2
+  selector:
+    matchLabels:
+      app: helloworld-java
+  template:
+    metadata:
+      labels:
+        app: helloworld-java
+    spec:
+      containers:
+      - name: helloworld-java
+        image: cicd-docker-dev.artifactory.aws.nbscloud.co.uk/phoenix/helloworld-java:v0.1.0 # TODO need to template this
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+      - name: kevin-image-pull-secret

@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "inbound-task-api.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "inbound-task-api.labels" . | nindent 4 }}
+    {{- with .Values.labels }}
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "inbound-task-api.selectorLabels" . | indent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        {{- include "inbound-task-api.labels" . | nindent 8 }}
+        {{- with .Values.labels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.serviceMesh.enabled }}
+        istio.io/rev: {{ .Values.serviceMesh.env }}
+        sidecar.istio.io/inject: "true"
+        {{- end }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: {{ quote .Values.config.port }}
+
+        {{- if .Values.vault.enabled }}
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: {{ .Values.vault.vaultAuthRole }} 
+        vault.hashicorp.com/tls-skip-verify: "true"
+        vault.hashicorp.com/agent-inject-token: "true"
+        vault.hashicorp.com/namespace: {{ .Values.vault.vaultNamespace }}
+        vault.hashicorp.com/auth-path: {{ .Values.vault.vaultAuthPath }}
+        vault.hashicorp.com/log-level: trace
+        vault.hashicorp.com/agent-inject-secret-msk_password: {{ print "secrets/microservices/" .Chart.Name "/" .Values.environment }}
+        vault.hashicorp.com/agent-inject-template-msk_password: |
+          {{ print "{{- with secret \"secrets/microservices/" .Chart.Name "/" .Values.environment "\" -}}" }}
+          {{ "export SPRING_KAFKA_PASSWORD='{{ .Data.data.msk_password }}'" }}
+          {{ "{{- end }}" }}
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.serviceAccount.saName }}
+      automountServiceAccountToken: true
+      {{- end }}
+      {{- if .Values.affinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name 
+                  operator: In
+                  values:
+                  - {{ template "inbound-task-api.name" . }}
+              topologyKey: topology.kubernetes.io/zone
+            weight: 100
+            
+      {{- end }}
+      containers:
+        - image: {{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: {{ .Chart.Name }}
+          command:
+            - /bin/bash
+            - -c
+            - {{ if .Values.vault.enabled }}source /vault/secrets/msk_password && {{ end }}java org.springframework.boot.loader.JarLauncher
+          securityContext:
+            runAsUser: 1001
+          {{- if .Values.config.enableResources }}
+          resources:
+            {{- toYaml .Values.config.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.config.port | quote }}
+            {{- range $key, $val := .Values.config.environment }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /api/actuator/health/livenessState
+              port: {{ .Values.config.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/actuator/health/readinessState
+              port: {{ .Values.config.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
