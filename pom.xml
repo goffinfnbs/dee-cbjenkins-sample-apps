@@ -32,8 +32,8 @@
   <name>demoapp</name>
   <description>Demo project for Spring Boot</description>
   <properties>
-    <java.version>11</java.version>
-<!--    <java.version>17</java.version> -->
+    <!--<java.version>11</java.version>-->
+    <java.version>17</java.version>
     <sonar.coverage.exclusions>**/DemoappApplication.java, **/SampleGreetings.java</sonar.coverage.exclusions>
     <revision>0.2.0-SNAPSHOT</revision>
   </properties>
