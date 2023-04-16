@@ -7,13 +7,16 @@
     <repository>
       <id>central</id>
       <name>central</name>
-      <url>https://artifactory.aws.nbscloud.co.uk:443/artifactory/cicd-maven-dev</url>
+	  <url>https://repo.maven.apache.org/maven2/</url>
+      <!-- <url>https://artifactory.aws.nbscloud.co.uk:443/artifactory/cicd-maven-dev</url> -->
     </repository>
+<!--
     <repository>
       <id>snapshots</id>
       <name>snapshots</name>
       <url>https://artifactory.aws.nbscloud.co.uk:443/artifactory/cicd-maven-snapshots</url>
     </repository>
+-->
   </repositories>
 
 
@@ -30,6 +33,7 @@
   <description>Demo project for Spring Boot</description>
   <properties>
     <java.version>11</java.version>
+<!--    <java.version>17</java.version> -->
     <sonar.coverage.exclusions>**/DemoappApplication.java, **/SampleGreetings.java</sonar.coverage.exclusions>
     <revision>0.2.0-SNAPSHOT</revision>
   </properties>
