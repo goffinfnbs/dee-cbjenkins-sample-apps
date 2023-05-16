@@ -7,7 +7,8 @@ jobs:
   maven_depenedency_submission:
     name: maven_depenedency_submission
     runs-on: ubuntu-latest
-    permissions: read-all|write-all
+    permissions: write-all
+#    permissions: read-all|write-all
 #    permissions:
 #      actions: read
 #      contents: read
